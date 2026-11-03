@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Google Analytics 4 - Rayo 3D Studio -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-NQ87HXP86B"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-NQ87HXP86B');
+</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rayo 3D Studio | Experiencias Web Inmersivas ⚡</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #030712;
+      color: #f3f4f6;
+      overflow-x: hidden;
+    }
+    .font-brand { font-family: 'Orbitron', sans-serif; }
+    
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    
+    .glow-red { box-shadow: 0 0 25px rgba(239, 68, 68, 0.5); }
+    .glow-cyan { box-shadow: 0 0 25px rgba(6, 182, 212, 0.5); }
+    .glow-emerald { box-shadow: 0 0 25px rgba(16, 185, 129, 0.5); }
+
+    #legalOverlay {
+      --cyan: #00f0ff;
+      --cyan-soft: rgba(0, 240, 255, 0.55);
+      --cyan-faint: rgba(0, 240, 255, 0.12);
+      --glass: rgba(6, 10, 16, 0.62);
+      --text: #e6f7ff;
+      --muted: #8ea6b3;
+      --radius: 20px;
+      --mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+      z-index: 100;
+    }
+    #legalOverlay.is-open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    #legalOverlay .backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      cursor: pointer;
+    }
+    #legalOverlay .modal {
+      position: relative;
+      width: 100%;
+      max-width: 720px;
+      max-height: calc(100vh - 40px);
+      display: flex;
+      flex-direction: column;
+      background: var(--glass);
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      border: 1px solid var(--cyan-soft);
+      border-radius: var(--radius);
+      box-shadow:
+        0 0 0 1px rgba(0, 240, 255, 0.08),
+        0 0 30px rgba(0, 240, 255, 0.28),
+        0 0 80px rgba(0, 240, 255, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      transform: translateY(24px) scale(0.96);
+      transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+      overflow: hidden;
+    }
+    #legalOverlay.is-open .modal { transform: translateY(0) scale(1); }
+    #legalOverlay .modal::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      box-shadow: 0 0 12px var(--cyan);
+    }
+    #legalOverlay .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 26px 28px 18px;
+    }
+    #legalOverlay .eyebrow {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+    }
+    #legalOverlay .modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-top: 6px;
+      color: var(--text);
+      text-wrap: balance;
+    }
+    #legalOverlay .close-btn {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      border: 1px solid var(--cyan-soft);
+      background: rgba(0, 240, 255, 0.05);
+      color: var(--cyan);
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    #legalOverlay .close-btn:hover {
+      background: rgba(0, 240, 255, 0.16);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.5);
+      transform: rotate(90deg);
+    }
+    #legalOverlay .close-btn svg { width: 18px; height: 18px; }
+    #legalOverlay .tab-input { position: absolute; opacity: 0; pointer-events: none; }
+    #legalOverlay .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 0 28px;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+    }
+    #legalOverlay .tab {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, text-shadow 0.2s;
+    }
+    #legalOverlay .tab:hover { color: var(--text); }
+    #legalOverlay #tab-terms:checked ~ .tabs label[for="tab-terms"],
+    #legalOverlay #tab-privacy:checked ~ .tabs label[for="tab-privacy"] {
+      color: var(--cyan);
+      border-bottom-color: var(--cyan);
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+    }
+    #legalOverlay .panels {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--cyan-soft) transparent;
+    }
+    #legalOverlay .panels::-webkit-scrollbar { width: 6px; }
+    #legalOverlay .panels::-webkit-scrollbar-thumb { background: var(--cyan-soft); border-radius: 6px; }
+    #legalOverlay .panel { display: none; animation: legalFadeIn 0.35s ease; }
+    #legalOverlay #tab-terms:checked ~ .panels .panel-terms,
+    #legalOverlay #tab-privacy:checked ~ .panels .panel-privacy { display: block; }
+    @keyframes legalFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #legalOverlay .updated {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 10px;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+    #legalOverlay .panel h3 {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 22px 0 8px;
+      color: var(--text);
+    }
+    #legalOverlay .panel h3:first-of-type { margin-top: 0; }
+    #legalOverlay .panel h3 span {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--cyan);
+    }
+    #legalOverlay .panel p,
+    #legalOverlay .panel li {
+      font-size: 14px;
+      color: var(--muted);
+      text-wrap: pretty;
+    }
+    #legalOverlay .panel ul { padding-left: 20px; margin-top: 6px; }
+    #legalOverlay .panel li { margin-bottom: 4px; }
+    #legalOverlay .panel li::marker { color: var(--cyan); }
+    #legalOverlay .panel strong { color: var(--text); font-weight: 600; }
+    #legalOverlay .callout {
+      margin-top: 22px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      background: var(--cyan-faint);
+      font-size: 13px;
+      color: var(--text);
+    }
+    #legalOverlay .panel a { color: var(--cyan); text-decoration: none; border-bottom: 1px dashed var(--cyan-soft); }
+    #legalOverlay .panel a:hover { text-shadow: 0 0 8px rgba(0, 240, 255, 0.7); }
+    #legalOverlay .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 28px;
+      border-top: 1px solid rgba(0, 240, 255, 0.15);
+      background: rgba(0, 0, 0, 0.25);
+    }
+    #legalOverlay .modal-footer small { font-size: 12px; color: var(--muted); }
+    #legalOverlay .accept-btn {
+      padding: 11px 22px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #001418;
+      background: var(--cyan);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.55);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    #legalOverlay .accept-btn:hover {
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.85);
+      transform: translateY(-1px);
+    }
+    #legalOverlay .close-btn:focus-visible,
+    #legalOverlay .accept-btn:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+    }
+    @media (max-width: 560px) {
+      #legalOverlay .modal-header,
+      #legalOverlay .panels,
+      #legalOverlay .modal-footer { padding-left: 18px; padding-right: 18px; }
+      #legalOverlay .tabs { padding: 0 18px; }
+      #legalOverlay .modal-title { font-size: 20px; }
+      #legalOverlay .modal-footer { flex-direction: column; align-items: stretch; text-align: center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #legalOverlay, #legalOverlay .modal, #legalOverlay .panel { transition: none !important; animation: none !important; }
+    }
+
+    .audio-dock {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      box-shadow:
+        0 0 0 1px rgba(239, 68, 68, 0.16),
+        0 0 22px rgba(6, 182, 212, 0.22);
+    }
+    .audio-dock.is-playing {
+      border-color: rgba(6, 182, 212, 0.7);
+      box-shadow: 0 0 24px rgba(6, 182, 212, 0.45);
+    }
+    .audio-dock.is-paused {
+      border-color: rgba(239, 68, 68, 0.55);
+      box-shadow: 0 0 22px rgba(239, 68, 68, 0.28);
+    }
+    .audio-volume {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 72px;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #06b6d4, #ef4444);
+      outline: none;
+    }
+    .audio-volume::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      box-shadow: 0 0 10px #22d3ee;
+      cursor: pointer;
+    }
+    .audio-volume::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border: none;
+      border-radius: 999px;
+      background: #e0f2fe;
+      box-shadow: 0 0 10px #22d3ee;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="min-h-screen relative flex flex-col justify-between">
+
+  <!-- LIENZO 3D INTERACTIVO -->
+  <canvas id="webgl" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+  <audio id="bgAudio" loop preload="auto" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+
+  <!-- NAVBAR -->
+  <header class="relative z-10 w-full max-w-6xl mx-auto px-6 py-6 flex justify-between items-center gap-3">
+    <div class="flex items-center gap-2 min-w-0">
+      <span class="text-3xl">⚡</span>
+      <span class="font-brand text-xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-cyan-400 to-emerald-400">
+        RAYO 3D STUDIO
+      </span>
+    </div>
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div id="audioDock" class="audio-dock is-paused flex items-center gap-2 rounded-full pl-1 pr-3 py-1">
+        <button type="button" id="btnAudio" onclick="toggleAudio()" aria-label="Reproducir música de fondo" aria-pressed="false" class="w-9 h-9 rounded-full border border-cyan-400/40 bg-cyan-500/15 text-cyan-200 hover:bg-cyan-400/25 glow-cyan flex items-center justify-center transition">
+          <span id="audioIconPlay" aria-hidden="true">▶</span>
+          <span id="audioIconPause" class="hidden" aria-hidden="true">❚❚</span>
+        </button>
+        <input id="audioVolume" class="audio-volume hidden sm:block" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volumen de música de fondo">
+        <span id="audioStatus" class="hidden md:inline font-brand text-[9px] uppercase tracking-wider text-cyan-300">Play</span>
+      </div>
+      <span class="hidden sm:inline-flex text-xs font-brand px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full">
+        • SISTEMA ACTIVO 24/7
+      </span>
+  
+      <!-- CONTADOR DE VISTAS Y LIKES EN TIEMPO REAL -->
+      <div class="hidden md:flex items-center gap-3 px-3 py-1 bg-cyan-950/40 border border-cyan-500/30 rounded-full text-xs font-brand">
+        <span class="flex items-center gap-1 text-cyan-300">
+          👁️ <span id="contadorVistas">1,250</span> <span class="text-gray-400 text-[10px]">VISTAS</span>
+        </span>
+        <span class="text-cyan-500/40">|</span>
+        <button type="button" onclick="darLike()" class="flex items-center gap-1 text-pink-400 hover:text-pink-300 transition">
+          ❤️ <span id="contadorLikes">482</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- SECCIÓN PRINCIPAL Y CUESTIONARIO -->
+  <main class="relative z-10 max-w-4xl mx-auto px-4 py-8 w-full flex-grow flex items-center justify-center">
+    
+    <!-- PANTALLA BIENVENIDA -->
+    <div id="stepHero" class="glass-panel p-8 sm:p-12 rounded-3xl text-center w-full max-w-2xl border-red-500/30">
+      <h1 class="text-3xl sm:text-5xl font-brand font-black mb-4 leading-tight">
+        REGALA UN <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-cyan-400 to-emerald-400">UNIVERSO 3D</span>
+      </h1>
+      <p class="text-sm sm:text-base text-gray-300 mb-8 leading-relaxed">
+        Olvídate de las invitaciones y cartas planas en PDF. Creamos experiencias interactivas con música, fotos en 3D y animación envolvente directamente en el celular.
+      </p>
+      <button onclick="iniciarCuestionario()" class="glow-red bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white font-brand font-black py-4 px-10 rounded-full text-sm uppercase tracking-widest transition transform hover:scale-105">
+        Diseñar Mi Experiencia 🚀
+      </button>
+    </div>
+
+    <!-- CUESTIONARIO PASO 1 -->
+    <div id="step1" class="hidden glass-panel p-8 rounded-3xl w-full max-w-xl">
+      <div class="flex justify-between items-center mb-6">
+        <span class="text-xs font-brand text-cyan-400">PASO 1 DE 3</span>
+        <span class="text-xs text-gray-400">¿Para quién es el detalle?</span>
+      </div>
+      <h2 class="text-xl font-brand font-bold mb-6">Selecciona la ocasión especial:</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button onclick="seleccionarOcasión('Pareja / Aniversario ❤️')" class="glass-panel p-5 rounded-2xl text-left hover:border-red-500 transition group">
+          <div class="text-2xl mb-2">❤️</div>
+          <div class="font-bold text-sm text-white group-hover:text-red-400">Pareja / Aniversario</div>
+          <p class="text-xs text-gray-400">Romántico, emotivo y fotos flotantes.</p>
+        </button>
+        <button onclick="seleccionarOcasión('Mejores Amigos / Prepa 🍻')" class="glass-panel p-5 rounded-2xl text-left hover:border-cyan-500 transition group">
+          <div class="text-2xl mb-2">🍻</div>
+          <div class="font-bold text-sm text-white group-hover:text-cyan-400">Mejores Amigos / Prepa</div>
+          <p class="text-xs text-gray-400">Puro desmadre, viajes, música y risas.</p>
+        </button>
+        <button onclick="seleccionarOcasión('Bodas / XV Años VIP 💍')" class="glass-panel p-5 rounded-2xl text-left hover:border-emerald-500 transition group">
+          <div class="text-2xl mb-2">💍</div>
+          <div class="font-bold text-sm text-white group-hover:text-emerald-400">Bodas / XV Años VIP</div>
+          <p class="text-xs text-gray-400">Elegante, confirmación RSVP y mapa.</p>
+        </button>
+        <button onclick="seleccionarOcasión('Cumpleaños / Sorpresa 🎉')" class="glass-panel p-5 rounded-2xl text-left hover:border-amber-500 transition group">
+          <div class="text-2xl mb-2">🎉</div>
+          <div class="font-bold text-sm text-white group-hover:text-amber-400">Cumpleaños / Sorpresa</div>
+          <p class="text-xs text-gray-400">Fiesta visual, pastel 3D y confeti.</p>
+        </button>
+      </div>
+    </div>
+
+    <!-- CUESTIONARIO PASO 2 -->
+    <div id="step2" class="hidden glass-panel p-8 rounded-3xl w-full max-w-xl">
+      <div class="flex justify-between items-center mb-6">
+        <span class="text-xs font-brand text-cyan-400">PASO 2 DE 3</span>
+        <span class="text-xs text-gray-400">Estilo Visual</span>
+      </div>
+      <h2 class="text-xl font-brand font-bold mb-6">Elige la vibra del mundo 3D:</h2>
+      <div class="space-y-4">
+        <button onclick="seleccionarEstilo('Cyberpunk & Neón Synthwave 🌅')" class="w-full glass-panel p-4 rounded-2xl text-left flex items-center gap-4 hover:border-pink-500 transition">
+          <span class="text-3xl">🌅</span>
+          <div>
+            <div class="font-bold text-sm text-white">Cyberpunk & Neón Synthwave</div>
+            <div class="text-xs text-gray-400">Sol gigante, cuadrícula 3D en movimiento y luces neón.</div>
+          </div>
+        </button>
+        <button onclick="seleccionarEstilo('Galaxia & Universo Cósmico 🌌')" class="w-full glass-panel p-4 rounded-2xl text-left flex items-center gap-4 hover:border-cyan-500 transition">
+          <span class="text-3xl">🌌</span>
+          <div>
+            <div class="font-bold text-sm text-white">Galaxia & Universo Cósmico</div>
+            <div class="text-xs text-gray-400">Estrellas, planeta central y órbitas fotográficas.</div>
+          </div>
+        </button>
+        <button onclick="seleccionarEstilo('Lujo Cristal & Elegancia Ahumada 💎')" class="w-full glass-panel p-4 rounded-2xl text-left flex items-center gap-4 hover:border-emerald-500 transition">
+          <span class="text-3xl">💎</span>
+          <div>
+            <div class="font-bold text-sm text-white">Lujo Cristal & Elegancia Ahumada</div>
+            <div class="text-xs text-gray-400">Estructuras geométricas doradas, cristales y ambiente VIP.</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- CUESTIONARIO PASO 3 (MODO DE ENTREGA) -->
+    <div id="step3" class="hidden glass-panel p-8 rounded-3xl w-full max-w-xl text-center">
+      <span class="text-xs font-brand text-emerald-400 mb-2 block">PASO 3 DE 3</span>
+      <h2 class="text-2xl font-brand font-black mb-2">¿Cómo prefieres crear tu proyecto?</h2>
+      <p class="text-xs text-gray-300 mb-6">Elige la modalidad que mejor se adapte a lo que buscas:</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <!-- OPCIÓN A: AUTOMÁTICA -->
+        <div class="glass-panel p-6 rounded-2xl border-cyan-500/40 flex flex-col justify-between">
+          <div>
+            <span class="text-2xl mb-2 block">⚡</span>
+            <h3 class="font-brand font-bold text-sm text-cyan-400 mb-1">AUTOMÁTICO 24/7</h3>
+            <p class="text-[11px] text-gray-300 mb-4">Rellenas un formulario sencillo con tus fotos y canción, se genera al instante.</p>
+            <div class="text-xl font-brand font-black text-white mb-4">$350 MXN <span class="text-xs text-gray-400 font-normal">/ $20 USD</span></div>
+          </div>
+          <button onclick="finalizarSeleccion('Automatico')" class="glow-cyan bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-brand font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider">
+            Crear Automático ⚡
+          </button>
+        </div>
+
+        <!-- OPCIÓN B: SÁBADO CON KENAN -->
+        <div class="glass-panel p-6 rounded-2xl border-amber-500/40 flex flex-col justify-between relative overflow-hidden">
+          <span class="absolute top-2 right-2 text-[9px] font-brand bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">VIP SÁBADOS</span>
+          <div>
+            <span class="text-2xl mb-2 block">👑</span>
+            <h3 class="font-brand font-bold text-sm text-amber-400 mb-1">EDICIÓN CON KENAN</h3>
+            <p class="text-[11px] text-gray-300 mb-4">Trabajo directo contigo el sábado. Ajustes de efectos, música exacta y detalles a tu gusto.</p>
+            <div class="text-xl font-brand font-black text-white mb-4">$850 MXN <span class="text-xs text-gray-400 font-normal">/ $50 USD</span></div>
+          </div>
+          <button onclick="finalizarSeleccion('SabadoVIP')" class="glow-pink bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-400 hover:to-red-400 text-slate-950 font-brand font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider">
+            Agendar Sábado VIP 👑
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANTALLA FINAL CHECKOUT MERCADO PAGO -->
+    <div id="stepCheckout" class="hidden glass-panel p-8 rounded-3xl w-full max-w-md text-center border-emerald-500/50">
+      <div class="text-5xl mb-4">💳</div>
+      <h2 class="text-2xl font-brand font-black text-emerald-400 mb-2">¡PROYECTO CONFIGURADO!</h2>
+      <p id="resumenConfig" class="text-xs text-gray-300 mb-6 bg-slate-900/60 p-4 rounded-xl text-left font-mono"></p>
+      
+      <a id="btnMercadoPago" href="#" target="_blank" onclick="procesarPago()" class="glow-emerald w-full inline-block bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-brand font-black py-4 px-6 rounded-full text-sm uppercase tracking-widest transition mb-3">
+        Pagar con Mercado Pago 🛒
+      </a>
+      <p class="text-[10px] text-gray-400">Acepta tarjetas de débito, crédito y transferencia Nu / Mercado Pago.</p>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="relative z-10 w-full max-w-6xl mx-auto px-6 py-4 text-center text-xs text-gray-500">
+    <div class="flex flex-wrap items-center justify-center gap-3 mb-3">
+      <button type="button" onclick="abrirLegal('terminos')" class="px-4 py-2 rounded-full border border-cyan-400/40 bg-cyan-500/10 text-cyan-300 hover:text-cyan-200 hover:border-cyan-300 hover:bg-cyan-500/20 glow-cyan font-brand uppercase tracking-wider text-[10px] transition">
+        Términos y Condiciones
+      </button>
+      <button type="button" onclick="abrirLegal('privacidad')" class="px-4 py-2 rounded-full border border-red-400/40 bg-red-500/10 text-red-300 hover:text-red-200 hover:border-red-300 hover:bg-red-500/20 glow-red font-brand uppercase tracking-wider text-[10px] transition">
+        Aviso de Privacidad
+      </button>
+    </div>
+    © 2026 Rayo 3D Studio. Desarrollado con WebGL & Engine 3D.
+  </footer>
+
+  <!-- MODAL LEGAL GLASS -->
+  <div id="legalOverlay" class="overlay" role="presentation">
+    <div class="backdrop" onclick="cerrarLegal()" aria-hidden="true"></div>
+
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+      <header class="modal-header">
+        <div>
+          <p class="eyebrow">Rayo 3D Studio · Legal</p>
+          <h2 id="legalTitle" class="modal-title">Términos del Servicio y Aviso de Privacidad</h2>
+        </div>
+        <button type="button" class="close-btn" onclick="cerrarLegal()" title="Cerrar" aria-label="Cerrar ventana">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </header>
+
+      <input type="radio" name="legal-tab" id="tab-terms" class="tab-input" checked>
+      <input type="radio" name="legal-tab" id="tab-privacy" class="tab-input">
+
+      <nav class="tabs" aria-label="Secciones legales">
+        <label for="tab-terms" class="tab">Términos del Servicio</label>
+        <label for="tab-privacy" class="tab">Aviso de Privacidad</label>
+      </nav>
+
+      <div class="panels">
+        <article class="panel panel-terms" id="legalTerminos" aria-label="Términos del Servicio">
+          <span class="updated">Última actualización: 01/11/2026</span>
+
+          <h3><span>01</span>Aceptación de los términos</h3>
+          <p>Al acceder, registrarte o adquirir cualquier experiencia en <strong>Rayo 3D Studio</strong>, aceptas estos Términos del Servicio. Si no estás de acuerdo con alguno de ellos, te pedimos no utilizar la plataforma.</p>
+
+          <h3><span>02</span>Cuenta de usuario</h3>
+          <p>Para comprar y acceder a experiencias 3D necesitas una cuenta. Eres responsable de mantener la confidencialidad de tus credenciales y de toda la actividad realizada desde tu cuenta. Debes tener al menos 18 años o contar con autorización de tu madre, padre o tutor.</p>
+
+          <h3><span>03</span>Licencia de uso del contenido 3D</h3>
+          <p>Al adquirir una experiencia, modelo o escena 3D, obtienes una licencia <strong>personal, limitada, no exclusiva e intransferible</strong>. Salvo que la ficha del producto indique una licencia comercial, no podrás:</p>
+          <ul>
+            <li>Revender, redistribuir o sublicenciar los archivos o experiencias.</li>
+            <li>Extraer, descompilar o modificar modelos, texturas o código.</li>
+            <li>Utilizar el contenido para entrenar modelos de inteligencia artificial.</li>
+          </ul>
+
+          <h3><span>04</span>Precios, pagos y entrega</h3>
+          <p>Los precios se muestran en tu moneda local e incluyen los impuestos aplicables. Las experiencias digitales se entregan de forma inmediata en tu biblioteca tras confirmarse el pago. Las experiencias presenciales o con reserva quedan sujetas a disponibilidad.</p>
+
+          <h3><span>05</span>Cancelaciones y reembolsos</h3>
+          <p>Puedes solicitar un reembolso dentro de los <strong>14 días</strong> posteriores a la compra, siempre que no hayas descargado ni ejecutado la experiencia más de 2 horas. Las reservas presenciales pueden cancelarse sin costo hasta 48 horas antes de la sesión.</p>
+
+          <h3><span>06</span>Requisitos técnicos y seguridad</h3>
+          <p>Algunas experiencias requieren visores de realidad virtual, GPU compatibles o navegadores con WebGL/WebGPU. El uso prolongado de RV puede provocar mareos, fatiga visual o desorientación. Úsalas en un espacio despejado y haz pausas frecuentes. Si padeces epilepsia fotosensible, consulta a un médico antes de usarlas.</p>
+
+          <h3><span>07</span>Propiedad intelectual</h3>
+          <p>Todo el contenido de la plataforma (marcas, diseño, modelos 3D, sonidos y software) pertenece a Rayo 3D Studio o a sus creadores asociados y está protegido por las leyes de propiedad intelectual.</p>
+
+          <h3><span>08</span>Limitación de responsabilidad</h3>
+          <p>Rayo 3D Studio no será responsable de daños indirectos derivados del uso de las experiencias, fallos de hardware de terceros o interrupciones del servicio fuera de nuestro control razonable.</p>
+
+          <h3><span>09</span>Modificaciones</h3>
+          <p>Podemos actualizar estos términos en cualquier momento. Te notificaremos por correo o mediante aviso en la plataforma con al menos 15 días de anticipación ante cambios relevantes.</p>
+        </article>
+
+        <article class="panel panel-privacy" id="legalPrivacidad" aria-label="Aviso de Privacidad">
+          <span class="updated">Última actualización: 01/11/2026</span>
+
+          <h3><span>01</span>Responsable del tratamiento</h3>
+          <p><strong>Rayo 3D Studio</strong> es responsable del uso y protección de tus datos personales, conforme a la legislación aplicable en materia de protección de datos.</p>
+
+          <h3><span>02</span>Datos que recopilamos</h3>
+          <ul>
+            <li><strong>Identificación:</strong> nombre, correo electrónico y fecha de nacimiento.</li>
+            <li><strong>Facturación:</strong> dirección y datos fiscales (los datos de tarjeta son procesados por pasarelas certificadas PCI-DSS; no los almacenamos).</li>
+            <li><strong>Técnicos:</strong> tipo de dispositivo, visor RV, GPU, navegador y dirección IP.</li>
+            <li><strong>De uso:</strong> tiempo dentro de cada experiencia, logros y preferencias.</li>
+          </ul>
+
+          <h3><span>03</span>Datos de sensores y movimiento</h3>
+          <p>Durante experiencias inmersivas podemos procesar de forma temporal datos de posición de cabeza, manos o seguimiento ocular <strong>únicamente para renderizar la experiencia</strong>. Estos datos se procesan en tu dispositivo y no se almacenan ni se vinculan a tu identidad.</p>
+
+          <h3><span>04</span>Finalidades</h3>
+          <ul>
+            <li>Gestionar tu cuenta, compras y biblioteca de experiencias.</li>
+            <li>Optimizar el rendimiento según tu hardware.</li>
+            <li>Brindar soporte técnico y prevenir fraudes.</li>
+            <li>Enviarte novedades y promociones (solo con tu consentimiento).</li>
+          </ul>
+
+          <h3><span>05</span>Cookies y tecnologías similares</h3>
+          <p>Usamos cookies esenciales para el funcionamiento del sitio y, con tu consentimiento, cookies analíticas para mejorar la plataforma. Puedes gestionarlas desde la configuración de tu navegador o desde nuestro panel de preferencias.</p>
+
+          <h3><span>06</span>Transferencia de datos</h3>
+          <p>Solo compartimos tus datos con proveedores de pago, alojamiento en la nube y soporte que actúan bajo contratos de confidencialidad. <strong>Nunca vendemos tu información personal.</strong></p>
+
+          <h3><span>07</span>Tus derechos (ARCO)</h3>
+          <p>Puedes ejercer en cualquier momento tus derechos de <strong>Acceso, Rectificación, Cancelación y Oposición</strong>, así como revocar tu consentimiento o solicitar la portabilidad de tus datos, escribiendo a <a href="mailto:darientallstrongrey@gmail.com">darientallstrongrey@gmail.com</a>. Responderemos en un plazo máximo de 20 días hábiles.</p>
+
+          <h3><span>08</span>Seguridad y conservación</h3>
+          <p>Aplicamos cifrado en tránsito (TLS) y en reposo, controles de acceso y auditorías periódicas. Conservamos tus datos mientras tu cuenta esté activa y hasta 5 años después por obligaciones legales y fiscales.</p>
+
+          <div class="callout">
+            ¿Dudas sobre tu privacidad? Contáctanos en <a href="mailto:darientallstrongrey@gmail.com">darientallstrongrey@gmail.com</a>.
+          </div>
+        </article>
+      </div>
+
+      <footer class="modal-footer">
+        <small>Al continuar confirmas que has leído ambos documentos.</small>
+        <button type="button" class="accept-btn" onclick="cerrarLegal()">Acepto y continuar</button>
+      </footer>
+    </section>
+  </div>
+<!-- MODAL DE LÍMITE DE PRUEBA GRATIS -->
+<div id="modalLimite" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+  <div class="bg-gray-900 border border-cyan-500/40 p-6 rounded-2xl max-w-sm text-center text-white shadow-2xl">
+    <div class="w-14 h-14 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold border border-cyan-400/30">
+      ⚡
+    </div>
+    <h3 class="text-xl font-bold mb-2">Pruebas gratuitas agotadas</h3>
+    <p class="text-sm text-gray-300 mb-6">
+      Has utilizado tus 3 vistas de prueba en <strong>Rayo 3D Studio</strong>. Desbloquea el visor ilimitado o solicita tu propio modelo personalizado.
+    </p>
+    <button onclick="solicitarAcceso()" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/20">
+      Solicitar Acceso Completo
+    </button>
+  </div>
+</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
